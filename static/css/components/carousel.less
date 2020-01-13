@@ -1,0 +1,159 @@
+/**
+ * Carousel
+ * https://github.com/internetarchive/openlibrary/wiki/Design-Pattern-Library#carousel
+ */
+
+@import (less) "components/read-panel.less";
+@import (less) "components/book.less";
+
+// Badly named. Should be renamed "carousel-heading" or similar.
+.home-h2 {
+  font-size: 1.2em;
+  font-weight: normal;
+  color: @link-blue;
+  margin-bottom: .5em;
+  margin-top: 1.75em;
+}
+
+.carousel-container {
+  margin: 0 -20px;
+  padding: 3px 15px;
+}
+
+.carousel {
+  .display-flex();
+  margin-bottom: 15px;
+  overflow-x: scroll;
+  padding: 10px 20px;
+
+  a,
+  a:link {
+    text-decoration: none;
+  }
+
+  &__item {
+    float: left;
+    height: 100%;
+    margin: 0 10px;
+    min-height: 1px;
+  }
+
+  // Modifiers
+  // A smaller carousel.
+  &--minimal {
+    img {
+      max-height: 100px;
+      width: auto;
+    }
+  }
+
+  > div {
+    min-width: 130px;
+  }
+
+  // JavaScript only block,but needed to avoid reflows
+  // Without, on slower connections, there will be a flash when buttons
+  // are added.
+  button {
+    border: 0;
+    position: absolute;
+    color: transparent;
+  }
+
+  .book {
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    .book-metadata {
+      width: 130px;
+      margin: 0 auto;
+    }
+
+    /*h2*/.book-title {
+      font-size: .8em;
+      margin: 5px 0;
+      color: @dark-grey;
+      font-weight: normal;
+
+      // stylelint-disable-next-line selector-max-specificity, max-nesting-depth
+      a {
+        color: @link-blue;
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+.carousel__item .slick-loading {
+  opacity: 0;
+}
+
+/**
+ * Carousel (decorated)
+ * https://github.com/internetarchive/openlibrary/wiki/Design-Pattern-Library#decorated-carousel
+ */
+
+.carousel-container-decorated {
+  background: @book-cover-carousel-background;
+  border-bottom: 1px solid @book-cover-carousel-border-bottom;
+  border-top: 1px solid @book-cover-carousel-border-top;
+}
+
+// TODO: Document where this is used. This is unlikely to need to be so specific.
+.carousel-section {
+  .SRPCover {
+    img {
+      box-shadow: 1px 2px 5px 0 @book-cover-shadow-color;
+    }
+  }
+}
+
+// Hide horizontal scroll bar if JS is going to be loaded
+.client-js {
+  .carousel {
+    margin-bottom: 0;
+    // hide the overlay until carousel--js has loaded
+    overflow: hidden;
+  }
+}
+
+@height-blank-cover: 200px;
+.carousel__item__blankcover {
+  position: relative;
+  padding: 33% 10px 10px 10px;
+  text-align: center;
+  background: @lighter-grey;
+  font-size: 1em;
+  color: black;
+  height: @height-blank-cover;
+
+  // White border
+  &::before {
+    content: "";
+    display: block;
+    position: absolute;
+    border: 2px solid fade(@white, 50%);
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: 10px;
+  }
+
+  &--title {
+    position: relative;
+    font-size: 0.9em;
+  }
+
+  &--authors {
+    position: relative;
+    color: hsl(0,0%,40%);
+    padding: 4px 4px 0;
+    font-size: 0.6875em;
+    font-style: oblique;
+  }
+}
+
+@import (less) "category-item.less";

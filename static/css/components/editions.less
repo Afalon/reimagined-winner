@@ -1,0 +1,206 @@
+/**
+ * EditionsTable
+ * https://github.com/internetarchive/openlibrary/wiki/Design-Pattern-Library#editionstable
+ */
+@import (less) "less/font-families.less";
+
+/* stylelint-disable selector-max-specificity */
+table#editions,
+.editions-table {
+  clear: both;
+  font-family: @lucida_sans_serif-1;
+
+  .cta-button-group {
+    width: 180px;
+  }
+
+  th {
+    font-family: @news_gothic_sans_serif-2;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: normal;
+    text-align: center;
+    background-color: @lightest-grey;
+    border-bottom: 1px solid @mid-grey;
+    border-left: 5px solid @white;
+    border-right: 5px solid @white;
+    padding: 6px 0;
+    outline: none;
+    cursor: pointer;
+  }
+
+  td.book {
+    vertical-align: top;
+  }
+
+  div.cover {
+    text-align: center;
+    padding: 10px 10px 10px 0;
+    width: 70px;
+    overflow: hidden;
+
+    img {
+      max-width: 70px;
+      max-height: 60px;
+    }
+  }
+
+  div.title {
+    font-size: 1.0em;
+    padding: 10px 0;
+  }
+
+  div.links {
+    font-size: 12px;
+    color: @dark-grey;
+    line-height: 1.5em;
+  }
+  .btn-notice {
+    padding: 0;
+    // stylelint-disable-next-line sh-waqar/declaration-use-variable
+    background-color: none !important;
+  }
+
+  .links {
+    li,
+    ul {
+      list-style-type: none;
+    }
+  }
+
+  td.icon {
+    text-align: left;
+    vertical-align: top;
+    padding: 10px 0 10px 10px;
+    width: 143px;
+
+    ul {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.lists {
+  table#editions {
+    h3 {
+      font-family: @lucida_sans_serif-1!important;
+      font-size: .75em;
+      display: inline;
+    }
+    th {
+      font-family: @lucida_sans_serif-1!important;
+      background-color: transparent;
+      text-align: left;
+      font-weight: normal;
+      font-size: .6875em;
+      color: @brown;
+      padding: 0 0 10px;
+      border-left: none;
+      border-right: none;
+    }
+    td {
+      color: @dark-grey;
+      vertical-align: top;
+
+      // stylelint-disable max-nesting-depth
+      &.what {
+        min-width: 410px;
+      }
+      &.when,
+      &.who,
+      &.que {
+        font-size: .75em;
+        padding: 10px 15px 10px 0;
+      }
+      .cover {
+        width: 40px;
+        padding-right: 10px;
+
+        img {
+          max-height: 35px;
+          max-width: 40px;
+        }
+      }
+      // stylelintenable max-nesting-depth
+    }
+  }
+}
+@media all and ( min-width: @width-breakpoint-desktop ) {
+  table#editions {
+    float: left;
+    width: 918px;
+
+    div.title {
+      float: left;
+      width: 350px;
+    }
+
+    div.cover {
+      float: left;
+    }
+
+  }
+}
+
+@media only screen and (max-width: @width-breakpoint-tablet) {
+  table#editions {
+    thead {
+      display: none;
+    }
+    tr {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid @lighter-grey;
+      padding-bottom: 10px;
+    }
+    hr {
+      visibility: hidden;
+    }
+    form {
+      padding: 10px;
+    }
+    ul.links ul,li {
+      display: inline;
+    }
+    td.book {
+      width: 100%;
+      display: inline-flex;
+    }
+    div.title {
+      width: 100%;
+    }
+    .links a {
+      font-size: 120%;
+    }
+
+    td.icon {
+      width: 100%;
+      padding: 0px;
+    }
+
+    td.icon.read {
+      order: 3;
+        .read {
+          display: flex;
+          flex-direction: column;
+          ul {
+            order: -1;
+            padding: 10px 0px;
+          }
+      }
+    }
+
+    td.icon.locate {
+      .links {
+        display: flex;
+      }
+      padding: 0px 10px;
+    }
+
+    .cta-button-group {
+      width: unset;
+    }
+
+  }
+}

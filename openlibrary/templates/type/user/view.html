@@ -1,0 +1,76 @@
+$def with (page)
+
+$var title: $page.displayname
+$ settings = page.get_users_settings()
+
+$if "lists" in ctx.features:
+    $ lists = page.get_lists(limit=3)
+$else:
+    $ lists = []
+
+<div id="contentHead">
+    $:macros.databarView(page)
+    <h1>$page.displayname</h1>
+    <div class="small sansserif">
+    $if page.created:
+        <i>Joined $datestr(page.created)</i>
+    $if ctx.user and ctx.user.key == page.key:
+        &bull;
+        <a href="$homepath()/account">$_("Settings")</a>
+        |
+        <a href="$homepath()/account/loans">$_("Loans")</a>
+    $elif ctx.user and ctx.user.is_admin():
+        &bull;
+        <span class="adminOnly"><a href="/admin$page.key">admin page</a></span>
+    $if "lists" in ctx.features and lists:
+        &bull;
+        <a href="$homepath()$page.key/lists">$_("Lists")</a>
+    </div>
+</div>
+
+<div id="contentBody">
+
+    $if page.website:
+        <p>
+        $for url in page.website:
+            <a href="$url" rel="nofollow">$url</a><br/>
+        </p>
+
+    $:sanitize(format(page.description))
+
+    <h2>Reading Log</h2>
+    $if settings and settings.get('public_readlog', 'no') == "yes":
+      <p>This user has chosen to publicly share the books they are <a href="$(page.key)/books/currently-reading">currently reading</a>, <a href="$(page.key)/books/already-read">have already read</a>, and <a href="$(page.key)/books/want-to-read">want to read</a>!</p>
+    $else:
+      <p>This user has chosen to keep their Reading Log private</p>
+
+    $if "lists" in ctx.features and lists:
+        <script type="text/javascript">
+        window.q.push(function(){
+            \$('ul#listResults li:nth-child(3)').css('padding-right','0');
+            \$('ul#listResults span.imageLg img').removeAttr('height');
+        });
+        </script>
+        <div id="listsDisplay">
+            <h2>Lists
+            <span class="sansserif small"><a href="$page.key/lists">See all</a></span>
+            </h2>
+            <div class="mybooks-list--clean mybooks-list">
+                <ul id="listResults">
+                    $for list in lists:
+                        <li class="searchResultItem">$:render_template("lists/snippet", list)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+
+    $if "recentchanges_v2" in ctx.features:
+        $ changes = render_template("recentchanges/render", author=page.key, limit=25)
+        $if changes.length > 1:
+            <h2>Recent Activity</h2>
+            $:changes
+        $else:
+            <p>$_("No edits. Yet.")</p>
+    $else:
+        $:macros.RecentChangesUsers(author=page, limit=25)
+</div>

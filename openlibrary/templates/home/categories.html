@@ -1,0 +1,32 @@
+$def with (test=False)
+
+$ subjects = get_cached_featured_subjects() if not test else []
+$if subjects:
+  <div class="carousel-section">
+    <div class="carousel-section-header">
+      <h2 class="home-h2"><a href="/subjects">Browse by Subject</a></h2>
+    </div>
+    <hr>
+    <div class="carousel-container">
+      <div class="carousel carousel--progressively-enhanced" id="categories_carousel"
+        data-config="$json_encode(['#categories_carousel', 6, 5, 4, 3, 2])">
+        $for subject_name in subjects:
+          $ subject = subjects[subject_name]
+          $ presentable_subject_name = subject_name.replace('_', ' ').title()
+          <div class="category-item carousel__item">
+            <a class="category-nostyle" data-ol-link-track="CarouselCategories"
+               href="/subjects/$(subject_name)#sort=date_published&ebooks=true">
+              <div class="category-icon">
+                <img class="category-img" src="/static/images/categories/$(subject_name).svg"
+                    width="30" height="30"
+                    alt="browse $(presentable_subject_name) books"/>
+              </div>
+              <p class="category-title">$presentable_subject_name</p>
+              $if subject:
+                <p class="category-count" name="">$commify(subject.get('work_count', '')) Books</p>
+            </a>
+          </div>
+      </div>
+    </div>
+  </div>
+

@@ -1,0 +1,10 @@
+.git/objects/*
+solr-update*
+dumps
+errors
+infogami
+config
+build
+**.pyc
+**__pycache__
+venv/

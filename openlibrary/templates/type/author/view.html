@@ -1,0 +1,233 @@
+$def with (page)
+
+$if ctx.user and ("merge-authors" in ctx.features or ctx.user.is_admin()) and query_param('merge', 'false') == 'true':
+    <script type="text/javascript">
+    // <!--
+    window.q.push(function() {
+        if ("$query_param('merge', 'false')" == "true") {
+            \$("#preMerge").parent().andSelf().show();
+
+            $ duplicates = ["/authors/" + k for k in query_param("duplicates", "").split(",")]
+            var data = {
+                "master": "$page.key",
+                "duplicates": $:json_encode(duplicates)
+            };
+            /*
+            \$.post("/authors/merge.json", JSON.stringify(data),
+                function(result, status, req) {
+                    \$("#preMerge").fadeOut(); \$("#postMerge").fadeIn();
+                },
+                "json"
+            );
+            */
+
+            \$.ajax({
+                url: "/authors/merge.json",
+                type: "POST",
+                data: JSON.stringify(data),
+                success: function(data, textStatus, XMLHttpRequest) {
+                    \$("#preMerge").fadeOut();
+                    \$("#postMerge").fadeIn();
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    \$("#preMerge").fadeOut();
+                    \$("#errorMerge").fadeIn();
+                }
+            });
+        }
+    });
+    //-->
+    </script>
+
+$ title = page.get('name', 'name missing')
+$ title_with_site = title + " | Open Library"
+$ meta_photo_url = item_image(page.get_photo_url("L"), "https://openlibrary.org/images/icons/avatar_author-lg.png")
+
+$var title: $title
+$var history: $page.history
+
+$ olid = page.key.split('/')[-1]
+
+$ books = page.get_books()
+$ book_list_excerpt = ''
+$if books and books.works:
+    $ book_titles_excerpt = [work.title for work in books.works[:8]]
+    $ book_list_excerpt = ', '.join(book_titles_excerpt)
+$ description = "Author of " + book_list_excerpt
+$putctx("description", description)
+
+$ library = (get_library() if 'inlibrary' in ctx.features else None)
+
+$add_metatag(property="og:title", content=title_with_site)
+$add_metatag(property="og:type", content="books.author")
+$add_metatag(property="og:image", content=meta_photo_url)
+$add_metatag(property="og:url", content=request.canonical_url)
+$add_metatag(property="og:site_name", content="Open Library")
+$add_metatag(property="og:description", content=description)
+
+$set_share_links(url=request.canonical_url, title=title, view_context=ctx)
+
+<div id="contentHead">
+
+    $:macros.databarView(page)
+
+    <h1>$page.get('name', 'name missing')</h1>
+    <h2 class="author collapse">
+    $if page.birth_date or page.death_date:
+        $page.birth_date - $page.death_date
+    $else:
+        $if page.date:
+            $page.date
+    </h2>
+</div>
+<div id="contentBody">
+
+    $if ctx.user and ("merge-authors" in ctx.features or ctx.user.is_admin()) and query_param('merge', 'false') == 'true':
+       <div class="message" style="display: none;">
+            <div id="preMerge" style="display: none;">
+                <p class="larger collapse"><strong>Merging Authors...</strong></p>
+                <p class="collapse adjust"><img src="/images/ajax-loader-bar.gif" width="220" height="19" alt="In progress..."/></p>
+                <p class="smaller lightgreen collapse">Duplicates</p>
+                <p class="small collapse">
+                    <ul>
+                        $ duplicates = ["/authors/" + k for k in query_param("duplicates", "").split(",")]
+                        $for key in duplicates:
+                             $ doc = get_document(key)
+                             $if doc:
+                                 <li> $doc.name; <small>($key)</small></li>
+                    </ul>
+                </p>
+            </div>
+            <div id="postMerge" style="display: none;">
+                <p class="right small"><b><a href="$page.key">Refresh the page</a>?</b></p>
+                <p class="larger collapse"><strong>Success!</strong></p>
+                <p class="small collapse">OK. The merge is in motion. <i>It will take <u>a few minutes to finish</u> the update.</i></p>
+            </div>
+
+            <div id="errorMerge" style="display: none;">
+                <p class="larger collapse"><strong>Argh!</strong></p>
+                <p class="small collapse">That merge didn't work. It's our fault, and we've made a note of it.</p>
+            </div>
+        </div>
+
+    <div class="contentTwothird" style="margin-bottom:0;">
+
+        $:format(page.get('bio', ''))
+
+        $if page.website:
+            <div class="section">
+                <h6 class="collapse black uppercase">$_("Website")</h6>
+                <a href="$page.website" class="datalink">$page.website</a>
+            </div>
+
+        $if page.location:
+            <div class="section hidden">
+                <h6 class="collapse black uppercase">$_("Location")</h6>
+                $page.location
+            </div>
+
+        <div class="clearfix"></div>
+        <div id="works" class="section">
+                <h2 class="collapse">
+                    $commify(books.num_found) work$("s" if books.num_found != 1 else "")
+                    <span class="count smaller"><a href="/books/add?author=$page.key">Add another</a>?</span>
+                </h2>
+                <p id="books"><span class="tools">
+                $if books.num_found > 1:
+                    <img src="/images/icons/icon_sort.png" alt="Sorting by" width="9" height="11" style="margin-right:5px;"/>
+                    $if books.sort == 'editions':
+                        <strong class="lightgreen">Most Editions</strong> | <a href="$changequery(sort='old')#editions">First Published</a> | <a href="$changequery(sort='new')#editions">Most Recent</a>
+                    $elif books.sort == 'old':
+                        <a href="$changequery(sort=None)#editions">Most Editions</a> | <strong class="lightgreen">First Published</strong> | <a href="$changequery(sort='new')#editions">Most Recent</a>
+                    $elif books.sort == 'new':
+                        <a href="$changequery(sort=None)#editions">Most Editions</a> |  <a href="$changequery(sort='old')#editions">First Published</a> | <strong class="lightgreen">Most Recent</strong>
+                    $elif books.sort == 'title':
+                        <a href="$changequery(sort=None)#editions">Most Editions</a> |  <a href="$changequery(sort='old')#editions">First Published</a> | <a href="$changequery(sort='new')#editions">Most Recent</a> | <strong class="lightgreen">Title</strong>
+                </span>
+
+                <p>
+                  $if input(mode="everything").mode == "everything":
+                    Showing all works by author. Would you like to
+                    see <a href="$changequery(mode='ebooks')">only ebooks</a>?
+                  $else:
+                    Showing ebooks only. Would you like to see
+                    <a href="$changequery(mode='everything')">everything</a>
+                    by this author?
+                </p>
+
+                $:macros.Pager(page=safeint(query_param('page'), default=1), num_found=books.num_found)
+
+                <div id="searchResults">
+                    <ul id="siteSearch" class="list-books">
+                      $for doc in books.works:
+                         $:macros.SearchResultsWork(doc)
+                    </ul>
+                </div>
+
+                $:macros.Pager(page=safeint(query_param('page'), default=1), num_found=books.num_found)
+        </div>
+    </div>
+    <div class="contentOnethird">
+        <div class="illustration">
+            $:render_template("covers/author_photo", page)
+            $:render_template("covers/change", page, ".bookCover img")
+        </div>
+
+        $def render_subjects(label, subjects, prefix):
+            $if subjects:
+                <div class="section">
+                    <h6 class="collapse black uppercase">$label</h6>
+                    <div class="sansserif">
+                    $for subject, count in subjects:
+                        <a href="/subjects/$prefix$subject.lower().replace(' ', '_')">$subject</a>$cond(not loop.last, ",", "")
+                    </div>
+                </div>
+
+        <!-- SUBJECTS DISPLAY -->
+        $if books.num_found > 0:
+            $:render_subjects("Subjects", books.get_facet('subject_facet'), '')
+            $:render_subjects("Places", books.get_facet('place_facet'), 'place:')
+            $:render_subjects("People", books.get_facet('person_facet'), 'person:')
+            $:render_subjects("Time", books.get_facet('time_facet'), 'time:')
+        <!-- /SUBJECTS -->
+
+        $if "lists" in ctx.features:
+            <div class="section Tools">
+                $:render_template("lists/widget", page, include_rating=False)
+            </div>
+
+        <div class="section">
+            <h3>$_('Links') <span class="gray small sansserif">($_('outside Open Library'))</span></h3>
+
+            $if page.links or page.remote_ids or (page.wikipedia and page.wikipedia.startswith("http")):
+                <ul class="booklinks sansserif">
+                $if page.remote_ids:
+                    $if page.remote_ids.isni:
+                       $ isni = page.remote_ids.isni
+                       <li>ISNI: <a href="http://www.isni.org/$isni">$' '.join([isni[i:i+4] for i in range(0, 16, 4)])</a></li>
+                    $if page.remote_ids.viaf:
+                        $ viaf = page.remote_ids.viaf
+                        <li>VIAF: <a href="https://viaf.org/viaf/$viaf">$viaf</a></li>
+                    $if page.remote_ids.wikidata:
+                        <li>Wikidata: <a href="https://tools.wmflabs.org/reasonator/?q=$page.remote_ids.wikidata">$page.remote_ids.wikidata</a></li>
+                $if page.wikipedia and page.wikipedia.startswith("http"):
+                    <li><a href="$page.wikipedia">Wikipedia</a></li>
+                $for link in page.links:
+                    <li><a href="$link.url">$link.title</a></li>
+                </ul>
+            $else:
+                <p class="sansserif small">$_('No links yet.') <a href="$page.url('/edit')#web">$_('Add one')</a>?</p>
+
+        </div>
+
+        $if page.alternate_names:
+            $if page.alternate_names != [""]:
+                <div class="section">
+                    <h3>$_("Alternative names")</h3>
+                    <ul class="booklinks sansserif"><li>$:"</li><li>".join(page.alternate_names)</li></ul>
+                </div>
+
+    </div>
+
+    $:render_template("lib/history", page)
+</div>

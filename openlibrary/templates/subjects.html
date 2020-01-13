@@ -1,0 +1,135 @@
+$def with (page)
+
+$var title: $page.name
+
+$ subject_list = [('subjects', 20), ('places', 20), ('people', 10), ('times', 10)]
+
+<div id="scrollHere"></div>
+
+<div class="page-heading-search-box">
+    <h1 class="inline">
+        $page.name
+    </h1>
+    <span class="heading">
+        <span class="count" id="coversCount">
+            <strong><span>$sprintf(ungettext("%s work", "%s works", page.work_count), commify(page.work_count))</span></strong>
+        </span>
+    </span>
+    <a href="#search" class="shift">Search for books with subject ${page.name}.</a>
+
+    <form action="/search" class="olform pagesearchbox">
+      <input type="hidden" name="${page.subject_type}_facet" value="$page.name" />
+      <input type="text" name="q" id="searchSubjects" size="100" class="larger" value="" />
+      <button type="submit" class="larger">$_('Search')</button>
+    </form>
+</div>
+
+<script type="text/javascript">
+<!--
+window.q.push( function () {
+    window.page = new Subject($:json_encode(page));
+} );
+//-->
+</script>
+<div class="contentBody">
+
+  $:render_template("books/custom_carousel", books=page.works, key="subjects", load_more={"url": page.key + ".json", "limit": len(page.works)})
+
+  <div class="head">
+    <h2 class="inline">
+      $_("Publishing History")
+    </h2>
+      <span class="shift">$:_('This is a chart to show the publishing history of editions of works about this subject. Along the X axis is time, and on the y axis is the count of editions published. <a href="#subjectRelated">Click here to skip the chart</a>.')</span>
+      <span class="count hidden chartZoom">&nbsp;<a href="javascript:;" class="resetSelection small">$_("Reset chart")</a> $_("or continue zooming in.")</span>
+      <span class="count chartUnzoom">&nbsp;$_("This graph charts editions published on this subject.")</span>
+  </div>
+
+    <script type="text/json+graph" id="graph-json-chartPubHistory">$:json_encode(page.publishing_history)</script>
+
+    <div class="chart">
+        <div class="chartYaxis">$_("Editions Published")</div>
+        <div id="chartPubHistory" class="thisChart">
+            <noscript>$_("You need to have JavaScript turned on to see the nifty chart!")</noscript>
+        </div>
+        <div class="chartXaxis">$_("Year of Publication")</div>
+    </div>
+
+    <div class="clearfix"></div>
+    
+    <div class="head" id="subjectRelated">
+      <h2>$_("Related...")
+        <!--
+            <span class="count">        <a href="/search?${page.subject_type}_facet=$page.name.replace('&','%26')">Search within $page.name</a></span>
+            -->
+      </h2>
+    </div>
+
+    $jsdef renderSubjects(subjects):
+        $if len(subjects) > 0:
+            <span class="subject">
+            $for s in subjects:
+                <a href="$s.key">$s.name</a>$cond(loop.last, '', ',')
+            </span>
+        $else:
+            <span class="title"><em>$_("None found.")</em></span>
+
+    $for s, limit in subject_list:
+        <div class="contentQuarter link-box">
+          <h6 class="black collapse uppercase">$s</h6>
+          <div class="subjects" id="subjects-$s">
+            $:renderSubjects(page[s][:limit])
+          </div>
+        </div>
+
+    <div class="clearfix"></div>
+
+$jsdef renderAuthors(authors):
+    $for a in page.authors:
+        <span class="tag">
+            <a href="$a.key" title="$_('See more books by, and learn about, this author')">$a.name</a>,
+        </span>
+        <span class="count">$sprintf(ungettext("%s book", "%s books", a.count), commify(a.count))</span>
+        <br/>
+<div id="resultsAuthors" class="widget-box">
+  <div class="head">
+    <h3>$_("Prolific Authors")</h3>
+    <div class="smallest lightgreen sansserif">$_("who have written the most books on this subject")</div>
+  </div>
+  <div class="unordered">
+    $:renderAuthors(page.authors)
+  </div>
+</div>
+<div class="spacer"></div>
+
+$ publishers_feature_enabled = "publishers" in ctx.features
+
+<script type="text/javascript">
+<!--
+window.q.push( function () {
+    var page = window.page;
+    $ page_key = page.key[page.key.rindex('/')+1:]
+    var page_key = "$page_key";
+    var publishers_feature_enabled = $:json_encode(publishers_feature_enabled);
+} );
+//-->
+</script>
+$jsdef renderPublishers(publishers):
+    $for p in publishers:
+        <span class="tag">
+            $if publishers_feature_enabled:
+                <a href="$p.key">$p.name</a>,
+            $else:
+                <a href="/search?${page.subject_type}_facet=$page.name.replace('&','%26')&amp;publisher_facet=$p.name.replace('"', '\\"').replace('&','%26')" title="$_('Get more information about this publisher')">$p.name</a>,
+        </span>
+        <span class="count">$sprintf(ungettext("%s edition", "%s editions", p.count), commify(p.count))</span>
+        <br/>
+
+$if "lists" in ctx.features:
+    <div class="spacer"></div>
+    <div id="subjectLists" class="widget-box">
+        $:render_template("lists/widget", page, include_rating=False)
+    </div>
+
+<div class="section clearfix"></div>
+
+</div>

@@ -1,0 +1,102 @@
+$def with (stats)
+$var title: Imports
+
+<div id="contentHead">
+    $:render_template("admin/menu")
+    <h1>Imports</h1>
+    <div><a href="/admin/imports/add">Add new books to import queue</a></div>
+</div>
+
+<div id="contentBody">
+    <h2>New Books Imported Per Day</h2>
+    <div class="chart">
+        <div id="books-added-per-day" class="graph">
+            <noscript>$_("You need to have JavaScript turned on to see the nifty chart!")</noscript>
+        </div>
+    </div>
+
+    <h2>Summary</h2>
+    <p>
+        $ pending_count = stats.get_count(status='pending')
+        <strong>Pending Items:</strong> $pending_count
+    </p>
+    <p>
+        $ rate = stats.get_imports_per_hour()
+        <strong>Current Import Rate:</strong> $rate imports/hour.
+    </p>
+    <p>
+        <strong>ETA:</strong>
+        $if rate:
+            $ eta = pending_count*1.0 / rate
+            ${"%.2f" % eta} hours
+        $else: -
+    </p>
+
+    <h2>Summary By Date</h2>
+    <table class="changeHistory">
+        <tr>
+            <th>Date</th>
+            <th>total</th>
+            <th>#books created</th>
+            <th>#books already found</th>
+            <th>#books failed to import</th>
+            <th>#books pending</th>
+        </tr>
+        $for date, counts in stats.get_count_by_date_status():
+            <tr>
+                <td><a href="/admin/imports/$date">$date</a></td>
+                <td>$sum(counts.values())</td>
+                <td>$counts.get('created', 0)</td>
+                <td>${counts.get('found', 0) + counts.get('modified', 0)}</td>
+                <td>$counts.get('failed', 0)</td>
+                <td>$counts.get('pending', 0)</td>
+            </tr>
+    </table>
+
+    <h2>Recent Imports</h2>
+    <table class="changeHistory">
+        <tr>
+            <th>#</th>
+            <th>Identifier</th>
+            <th>OL Key</th>
+            <th>Status</th>
+            <th>Error</th>
+            <th>Added Time</th>
+            <th>Imported Time</th>
+        </tr>
+        $for row in stats.get_items(order="import_time desc", limit=20):
+            <tr>
+                <td>$loop.index</td>
+                <td><a href="//archive.org/details/$row.ia_id">$truncate(row.ia_id, 40)</a></td>
+                <td>
+                    $if row.ol_key:
+                        <a href="$row.ol_key">$row.ol_key.split("/")[-1]</a>
+                    $else:
+                        -
+                </td>
+                <td>$row.status</td>
+                <td>${row.error or '-'}</td>
+                <td>$datestr(row.added_time)</td>
+                <td>$datestr(row.import_time)</td>
+            </tr>
+    </table>
+</div>
+<script type="text/json+graph" id="json-books-imported-daily">$:json_encode(stats.get_books_imported_per_day())</script>
+
+<style type="text/css">
+div.graph, div.chart{
+    width:838px;
+    height:180px;
+    float:none;
+    background-image:none;
+}
+div.pie {
+    width: 420px;
+    height: 250px;
+}
+.chartYaxis{
+    width:180px;
+    top:85px;
+    left:-85px;
+}
+</style>

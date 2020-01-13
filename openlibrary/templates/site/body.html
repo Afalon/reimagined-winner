@@ -1,0 +1,33 @@
+$def with (page)
+
+$ bodyid = ctx.get('bodyid', 'user')
+$ show_banners = bodyid != 'form'
+
+<body id="$bodyid">
+  <script>
+      // Provide a signal that JS will load
+      document.body.className += ' client-js';
+  </script>
+  <span id="top"></span>
+  $# on form pages e.g. manage-covers, add-cover we do not display the header
+  $# this is consistent with version 1.
+  $if show_banners:
+    $:render_template("site/alert")
+    $:render_template("lib/nav_head", None)
+  $# don't render test-body-mobile for iframes
+  <div $:('id="test-body-mobile"' if bodyid != 'form' else '')>
+    $if show_banners:
+      $#print errors (hidden by default as styles are loaded via JS)
+      <div class="flash-messages" style="display: none;">
+      $for flash in get_flash_messages():
+        <div class="$flash.type"><span>$flash.message</span></div>
+      </div>
+      $# Paste next line into announcement variable to show the blue banner
+      $# <strong>Title:</strong> Description &nbsp; <a href="#" data-ol-link-track="AnnouncementsBar|BlogWidget" class="btn primary">Learn More</a>
+      $ announcement = '<strong>Together</strong>, let\'s build an Open Library for the World. <a class="cta-btn cta-btn--available" style="display: inline;" href="/sponsorship">Sponsor a Book</a>'
+      $if announcement:
+        <div class="page-banner page-banner-body">     
+         $:announcement
+        </div>
+    $:page
+  </div>
